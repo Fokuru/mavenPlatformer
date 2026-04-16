@@ -75,6 +75,7 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
                 ConnectionHandler handler = main.new ConnectionHandler(connection, CURRENT_CONNECTIONS);
                 try {
 					main.connections.add(handler);
+					System.out.println("A new player exists! Player " + (CURRENT_CONNECTIONS+1));
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -92,33 +93,41 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 
 	@Override
 	public void init() {
+
+		new Thread(() -> {
+            while (CURRENT_CONNECTIONS>0) {
+
 		GameResources.load();
 
 		currentLevelIndex = 0;
 
-		levels = new LevelData[4];
-		try {
-			levels[0] = LeveldataLoader.loadLeveldata("/workspaces/platformer/workspace/maps/firstLevel.txt");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		for (int i = 0; i < currentLevel.size(); i++) {
-			currentLevel.set(i, new Level(levels[currentLevelIndex]));
-			currentLevel.get(i).addPlayerDieListener(this);
-			currentLevel.get(i).addPlayerWinListener(this);
-		}
-		
+			levels = new LevelData[4];
+			try {
+				levels[0] = LeveldataLoader.loadLeveldata("/workspaces/platformer/workspace/maps/firstLevel.txt");
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			for (int i = 0; i < currentLevel.size(); i++) {
+				currentLevel.set(i, new Level(levels[currentLevelIndex]));
+				currentLevel.get(i).addPlayerDieListener(this);
+				currentLevel.get(i).addPlayerWinListener(this);
+			}
+			
+			
+			
 
-		
+			screenTransition.addScreenTransitionListener(this);
+			
+			active = true;
+			
+			numberOfTries = 0;
+			levelStartTime = System.currentTimeMillis();
+			
+			levelCompleteBar = new LevelCompleteBar(100, 10, SCREEN_WIDTH - 200, 10, currentLevel.get(0).getPlayer());
 
-		screenTransition.addScreenTransitionListener(this);
-		
-		active = true;
-		
-		numberOfTries = 0;
-		levelStartTime = System.currentTimeMillis();
-		
-		levelCompleteBar = new LevelCompleteBar(100, 10, SCREEN_WIDTH - 200, 10, currentLevel.get(0).getPlayer());
+		}
+		}).start();
+	
 	}
 	
 	//-----------------------------------------------------Screen Transition Listener
@@ -183,28 +192,38 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 		if(KeyboardInputManager.isKeyDown(KeyEvent.VK_N)) init();
 		if(KeyboardInputManager.isKeyDown(KeyEvent.VK_ESCAPE)) System.exit(0);
 
-		if (active) {
-			for (int i = 0; i < currentLevel.size(); i++) {
-				currentLevel.get(i).update(tslf);
-			}
-		}
+		new Thread(() -> {
+            while (CURRENT_CONNECTIONS>0) {
+				
+				if (active) {
+					for (int i = 0; i < currentLevel.size(); i++) {
+						currentLevel.get(i).update(tslf);
+					}
+				}
 
-		screenTransition.update(tslf);
-		
-		levelCompleteBar.update(tslf);
+				screenTransition.update(tslf);
+				
+				levelCompleteBar.update(tslf);
+			}
+		}).start();
 	}
 
 	@Override
 	public void draw(Graphics g) {
+
+		new Thread(() -> {
+            while (CURRENT_CONNECTIONS>0) {
 		
-		drawBackground(g);
-		//Camera-translate
-		currentLevel.get(0).draw(g);
-		//- Camera-translate
-		
-		levelCompleteBar.draw(g);
-		
-		screenTransition.draw(g);
+			drawBackground(g);
+			//Camera-translate
+			currentLevel.get(0).draw(g);
+			//- Camera-translate
+			
+			levelCompleteBar.draw(g);
+			
+			screenTransition.draw(g);
+			}
+		}).start();
 	}
 
 	public void drawBackground(Graphics g) {

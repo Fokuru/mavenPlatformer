@@ -19,7 +19,7 @@ public class PhysicsObject extends GameObject{
 	protected Tile[] collisionMatrix;
 	protected Tile[] closestMatrix;
 
-	private Level level;
+	protected Level level;
 	
 	public PhysicsObject(float x, float y, int width, int height, Level level) {
 		super(x, y, width, height);

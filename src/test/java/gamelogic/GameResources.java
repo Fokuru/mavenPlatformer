@@ -14,9 +14,9 @@ public final class GameResources {
 	
 	public static void load() {
 		try {
-			tileset = TilesetLoader.loadTileset("/workspaces/platformer/workspace/gfx/tileset.txt", ImageLoader.loadImage("/workspaces/platformer/workspace/gfx/tileset.png"));
+			tileset = TilesetLoader.loadTileset("/workspaces/mavenPlatformer/src/test/java/gfx/tileset.txt", ImageLoader.loadImage("/workspaces/mavenPlatformer/src/test/java/gfx/tileset.png"));
 			
-			enemy = ImageLoader.loadImage("/workspaces/platformer/workspace/gfx/Enemy.png");
+			enemy = ImageLoader.loadImage("/workspaces/mavenPlatformer/src/test/java/gfx/Enemy.png");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

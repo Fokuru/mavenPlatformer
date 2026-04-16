@@ -21,6 +21,7 @@ public class Button extends Tile {
 	public void setPressed(boolean pressed) {
 		this.pressed = pressed;
         if (pressed){
+			level.removeSpikes();
             //image=;
         } else {
             //image=;
