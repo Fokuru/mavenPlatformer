@@ -12,6 +12,14 @@ import gamelogic.clientHandling.Information;
 import gamelogic.level.Level;
 import gamelogic.tiles.Tile;
 import gamelogic.key.Key;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+
 
 public class Player extends PhysicsObject{
 	public float walkSpeed = 400;
@@ -23,6 +31,7 @@ public class Player extends PhysicsObject{
 	private Level holder;
 	private boolean isJumping = false;
 	private boolean neg = false;
+	private int[] colors = {255, 255, 0};
 
 	public Player(float x, float y, Level level) {
 	
@@ -31,6 +40,13 @@ public class Player extends PhysicsObject{
 		this.hitbox = new RectHitbox(this, offset,offset, width -offset, height - offset);
 		holder = level;
 		myInfo = new Information((int)x, (int)y, width-offset, height-offset);
+
+		int r = (int)(Math.random()*255);
+		int g = (int)(Math.random()*255);
+		int b = (int)(Math.random()*255);
+		colors[0] = r;
+		colors[1] = g;
+		colors[2] = b;
 	}
 
 	@Override
@@ -98,7 +114,7 @@ public class Player extends PhysicsObject{
 
 	@Override
 	public void draw(Graphics g) {
-		g.setColor(Color.YELLOW);
+		g.setColor(new Color(colors[0], colors[1], colors[2]));
 		MyGraphics.fillRectWithOutline(g, (int)getX(), (int)getY(), width, height);
 		
 		if(Main.DEBUGGING) {

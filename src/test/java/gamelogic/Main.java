@@ -41,12 +41,11 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 	private long levelFinishTime;
 
 	private static int CURRENT_CONNECTIONS = 0;
-    public static final int LISTENING_PORT = 9876;
+    public static final int LISTENING_PORT = 9877;
     private List<ConnectionHandler> connections = Collections.synchronizedList(new ArrayList<>());{
     try {
             InetAddress host = InetAddress.getLocalHost();
             final ServerSocket socket = new ServerSocket(LISTENING_PORT);
-			System.out.println("I connected to the server!");
             // final ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
             // final ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
             AtomicBoolean running = new AtomicBoolean(true);
@@ -59,12 +58,23 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 	private LevelCompleteBar levelCompleteBar;
 
 	public static void main(String[] args) {
+		System.out.println("Starting server...");
 		Main main = new Main();
-		main.start("Eden Jump", SCREEN_WIDTH, SCREEN_HEIGHT);
 		//Server start = new Server();
 
 		ServerSocket listener;  // Listens for incoming connections.
         Socket connection;      // For communication with the connecting program.
+
+
+
+		System.out.println("Running");
+		new Thread(() -> {
+			while (CURRENT_CONNECTIONS>0) {
+				System.out.println("Starting game...");
+				main.start("Platformer", SCREEN_WIDTH, SCREEN_HEIGHT);
+			}
+		}).start();
+
 
 		try {
             listener = new ServerSocket(LISTENING_PORT);
@@ -77,6 +87,7 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
                 try {
 					main.connections.add(handler);
 					System.out.println("A new player exists! Player " + (CURRENT_CONNECTIONS+1));
+					
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -84,6 +95,7 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 				}
                 CURRENT_CONNECTIONS++;
                 handler.start();
+
             }
         }
         catch (Exception e) {
@@ -91,6 +103,9 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
             System.out.println("Error:  " + e);
             return;
         }
+
+		
+		
 	}
 
 	@Override

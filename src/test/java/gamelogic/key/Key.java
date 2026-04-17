@@ -27,9 +27,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JFrame;
 import javax.swing.JTextField;
+import gamelogic.GameResources;
 
 public class Key extends PhysicsObject {
-    private BufferedImage image;
+    private BufferedImage image = GameResources.keyImage;
 	public boolean pickedUp;
 
     public Key (float x, float y, Level level){

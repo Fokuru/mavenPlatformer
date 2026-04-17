@@ -83,10 +83,15 @@ public class Level {
 
 		//get the localhost IP address, if server is running on some other IP, you need to use that
 		try{
+		System.out.println("Connecting to server...");
         InetAddress host = InetAddress.getLocalHost();
-        Socket socket = new Socket(host, 9876);
+		System.out.println("Connected to server at: " + host.getHostAddress());
+        Socket socket = new Socket(host, 9877);
+		System.out.println("Connected to server at: " + socket.getInetAddress());
         ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+		System.out.println("Output stream created.");
         ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+		System.out.println("Input stream created.");
         
         
       
@@ -197,27 +202,13 @@ public class Level {
 					tiles[x][y] = new Spikes(xPosition, yPosition, tileSize, Spikes.VERTICAL_RIGHTWARDS, this);
 					spikesList.add(x);
 					spikesList.add(y);
-				}else if (values[x][y] == 6){
-					tiles[x][y] = new SolidTile(xPosition, yPosition, tileSize, tileset.getImage("Dirt"), this);
-				
-				}else if (values[x][y] == 7){
-					tiles[x][y] = new SolidTile(xPosition, yPosition, tileSize, tileset.getImage("Grass"), this);
 				
 				}else if (values[x][y] == 9){
-					tiles[x][y] = new Door(xPosition, yPosition, tileSize, tileset.getImage("Flag"), this);
+					tiles[x][y] = new Door(xPosition, yPosition, tileSize, tileset.getImage("Door_closed"), this);
 				
 				}else if (values[x][y] == 10) {
 					keys.add(new Key(xPosition*tileSize, yPosition*tileSize, null));
 					keyWin=true;
-				
-				} else if (values[x][y] == 12){
-					tiles[x][y] = new SolidTile(xPosition, yPosition, tileSize, tileset.getImage("Solid_down"), this);
-				
-				}else if (values[x][y] == 13){
-					tiles[x][y] = new SolidTile(xPosition, yPosition, tileSize, tileset.getImage("Solid_up"), this);
-				
-				}else if (values[x][y] == 14){
-					tiles[x][y] = new SolidTile(xPosition, yPosition, tileSize, tileset.getImage("Solid_middle"), this);
 				}else if (values[x][y] == 15){
 					tiles[x][y] = new Button(xPosition, yPosition, tileSize, tileset.getImage("Solid_middle"), this, false);
 			}

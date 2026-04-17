@@ -1,19 +1,15 @@
 Name, X-Pos in tileset, Y-Pos in tileset
-tileSize=10
+tileSize=32
 0,Air,4,0
 1,Solid,3,3
-
 2,Spikes_downwards,0,2
 3,Spikes_upwards,2,1
 4,Spikes_rightwards,1,2
 5,Spikes_leftwards,3,1
-
-
 !, 8 is reserved for enemies which are on a separate palette
 12,Solid_down,0,0
 13,Solid_up,0,0
 14,Solid_middle,0,0
-
 15,Door_closed,1,0
 16,Door_open,2,0
 17,Button_up,3,0

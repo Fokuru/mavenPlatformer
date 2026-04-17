@@ -10,13 +10,13 @@ public final class GameResources {
 
 	public static Tileset tileset;
 	
-	public static BufferedImage enemy;
+	public static BufferedImage keyImage;
 	
 	public static void load() {
 		try {
-			tileset = TilesetLoader.loadTileset("/workspaces/mavenPlatformer/src/test/java/gfx/tileset.txt", ImageLoader.loadImage("/workspaces/mavenPlatformer/src/test/java/gfx/tileset.png"));
+			tileset = TilesetLoader.loadTileset("/workspaces/mavenPlatformer/src/test/java/gfx/picotileset.txt", ImageLoader.loadImage("/workspaces/mavenPlatformer/src/test/java/gfx/TileMapPicoPenv3.png"));
 			
-			enemy = ImageLoader.loadImage("/workspaces/mavenPlatformer/src/test/java/gfx/Enemy.png");
+			keyImage = ImageLoader.loadImage("/workspaces/mavenPlatformer/src/test/java/gfx/PicoKey.png");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
