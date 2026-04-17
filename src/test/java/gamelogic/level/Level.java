@@ -155,7 +155,7 @@ public class Level {
 	catch (UnknownHostException e) {
 			System.out.println("Host not found: " + e.getMessage());
 		} catch (IOException e) {
-			System.out.println( "problems connecting to input from server" + e.getMessage());
+			System.out.println( "problems connecting to input from server: " + e.getMessage());
 		
 		}
 	}

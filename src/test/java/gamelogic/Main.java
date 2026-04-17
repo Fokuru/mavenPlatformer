@@ -45,13 +45,14 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
     private List<ConnectionHandler> connections = Collections.synchronizedList(new ArrayList<>());{
     try {
             InetAddress host = InetAddress.getLocalHost();
-            final Socket socket = new Socket(host, LISTENING_PORT);
-            final ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-            final ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
+            final ServerSocket socket = new ServerSocket(LISTENING_PORT);
+			System.out.println("I connected to the server!");
+            // final ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
+            // final ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
             AtomicBoolean running = new AtomicBoolean(true);
         } 
         catch (Exception e) {
-            System.out.println("Haha");
+            System.out.println("Ran into this error: " + e);
         }
     }
 	
@@ -79,6 +80,7 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
+					System.out.println("Error adding new player: " + e);
 				}
                 CURRENT_CONNECTIONS++;
                 handler.start();

@@ -11,18 +11,7 @@ import gameengine.*;
 public class Server {
     private static int CURRENT_CONNECTIONS = 0;
     public static final int LISTENING_PORT = 9876;
-    private List<ConnectionHandler> connections = Collections.synchronizedList(new ArrayList<>());{
-    try {
-            InetAddress host = InetAddress.getLocalHost();
-            final Socket socket = new Socket(host, LISTENING_PORT);
-            final ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-            final ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-            AtomicBoolean running = new AtomicBoolean(true);
-        } 
-        catch (Exception e) {
-            System.out.println("Haha");
-        }
-    }
+    private List<ConnectionHandler> connections = Collections.synchronizedList(new ArrayList<>());
 
     public Server() {
         ServerSocket listener;  // Listens for incoming connections.
