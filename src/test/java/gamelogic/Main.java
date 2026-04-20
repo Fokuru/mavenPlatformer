@@ -39,80 +39,20 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 	private int numberOfTries;
 	private long levelStartTime;
 	private long levelFinishTime;
-
-	private static int CURRENT_CONNECTIONS = 0;
-    public static final int LISTENING_PORT = 9877;
-    private List<ConnectionHandler> connections = Collections.synchronizedList(new ArrayList<>());{
-    try {
-            InetAddress host = InetAddress.getLocalHost();
-            final ServerSocket socket = new ServerSocket(LISTENING_PORT);
-            // final ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-            // final ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-            AtomicBoolean running = new AtomicBoolean(true);
-        } 
-        catch (Exception e) {
-            System.out.println("Ran into this error: " + e);
-        }
-    }
+	private static Server server;
+	
 	
 	private LevelCompleteBar levelCompleteBar;
 
 	public static void main(String[] args) {
-		System.out.println("Starting server...");
-		Main main = new Main();
-		//Server start = new Server();
-
-		ServerSocket listener;  // Listens for incoming connections.
-        Socket connection;      // For communication with the connecting program.
-
-
-
-		System.out.println("Running");
-		new Thread(() -> {
-			while (CURRENT_CONNECTIONS>0) {
-				System.out.println("Starting game...");
-				main.start("Platformer", SCREEN_WIDTH, SCREEN_HEIGHT);
-			}
-		}).start();
-
-
-		try {
-            listener = new ServerSocket(LISTENING_PORT);
-            System.out.println("Listening on port " + LISTENING_PORT);
-            while (true) {
-                  // Accept next connection request and handle it.
-                connection = listener.accept();
-                System.out.println("Connection received from " + connection.getInetAddress());
-                ConnectionHandler handler = main.new ConnectionHandler(connection, CURRENT_CONNECTIONS);
-                try {
-					main.connections.add(handler);
-					System.out.println("A new player exists! Player " + (CURRENT_CONNECTIONS+1));
-					
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					System.out.println("Error adding new player: " + e);
-				}
-                CURRENT_CONNECTIONS++;
-                handler.start();
-
-            }
-        }
-        catch (Exception e) {
-            System.out.println("Sorry, the server has shut down.");
-            System.out.println("Error:  " + e);
-            return;
-        }
-
-		
-		
+		server = new Server();
 	}
 
 	@Override
 	public void init() {
 
 		new Thread(() -> {
-            while (CURRENT_CONNECTIONS>0) {
+            while (server.getConnections() > 0) {
 
 		GameResources.load();
 
@@ -124,7 +64,7 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			for (int i = 0; i < currentLevel.size(); i++) {
+			for (int i = 0; i < server.getConnections(); i++) {
 				currentLevel.set(i, new Level(levels[currentLevelIndex]));
 				currentLevel.get(i).addPlayerDieListener(this);
 				currentLevel.get(i).addPlayerWinListener(this);
@@ -210,7 +150,7 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 		if(KeyboardInputManager.isKeyDown(KeyEvent.VK_ESCAPE)) System.exit(0);
 
 		new Thread(() -> {
-            while (CURRENT_CONNECTIONS>0) {
+            while (server.getConnections() > 0) {
 				
 				if (active) {
 					for (int i = 0; i < currentLevel.size(); i++) {
@@ -219,8 +159,9 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 				}
 
 				screenTransition.update(tslf);
-				
+				if (levelCompleteBar != null) {
 				levelCompleteBar.update(tslf);
+				}
 			}
 		}).start();
 	}
@@ -229,7 +170,7 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 	public void draw(Graphics g) {
 
 		new Thread(() -> {
-            while (CURRENT_CONNECTIONS>0) {
+            while (server.getConnections() > 0) {
 		
 			drawBackground(g);
 			//Camera-translate
@@ -250,57 +191,5 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 
 	
 
-	private class ConnectionHandler extends Thread {
-        Socket client;
-        ObjectOutputStream oos;
-        ObjectInputStream ois;
-        int number;
-
-        ConnectionHandler(Socket socket, int newNum) {
-            client = socket;
-            number = newNum;
-        }
-        
-        public void run() {
-            String clientAddress = "User " + number;
-            try {
-                oos = new ObjectOutputStream(client.getOutputStream());
-                ois = new ObjectInputStream(client.getInputStream());
-                
-                while (true) {
-                    Level message = (Level) ois.readObject();
-                    System.out.println("Message Received from " + clientAddress);
-                    
-                    // Broadcast the message to all other clients
-                    synchronized (connections) {
-                        for (ConnectionHandler handler : connections) {
-                            if (handler != this) {
-                                try {
-                                    handler.oos.writeObject(message);
-                                    System.out.println("Hehe");
-                                    handler.oos.flush();
-                                    
-                                } catch (IOException e) {
-                                    System.out.println("Error sending to client: " + e);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception e) {
-                System.out.println("Error on connection with: " + clientAddress + ": " + e);
-            } finally {
-                // Remove this handler from the list when connection closes
-                synchronized (connections) {
-                    connections.remove(this);
-                }
-                try {
-                    client.close();
-                } catch (IOException e) {
-                    // Ignore
-                }
-            }
-        }
-    }
+	
 }

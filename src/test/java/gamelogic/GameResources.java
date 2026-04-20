@@ -15,8 +15,8 @@ public final class GameResources {
 	public static void load() {
 		try {
 			tileset = TilesetLoader.loadTileset("/workspaces/mavenPlatformer/src/test/java/gfx/picotileset.txt", ImageLoader.loadImage("/workspaces/mavenPlatformer/src/test/java/gfx/TileMapPicoPenv3.png"));
-			
 			keyImage = ImageLoader.loadImage("/workspaces/mavenPlatformer/src/test/java/gfx/PicoKey.png");
+			System.out.println("Succesfully loaded");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

@@ -170,6 +170,7 @@ public class Level {
 	}
 
 	public void restartLevel() {
+		System.out.println("Level begun creation");
 		int[][] values = mapdata.getValues();
 		tiles = new Tile[width][height];
 
@@ -211,9 +212,9 @@ public class Level {
 					keyWin=true;
 				}else if (values[x][y] == 15){
 					tiles[x][y] = new Button(xPosition, yPosition, tileSize, tileset.getImage("Solid_middle"), this, false);
-			}
+				}
 
-		}
+			}
 
 			key = new Key[keys.size()];
 			map = new Map(width, height, tileSize, tiles);
@@ -228,7 +229,10 @@ public class Level {
 			active = true;
 			playerDead = false;
 			playerWin = false;
+
+			
 		}
+		System.out.println("Level succesful creation");
 	}
 
 	public void onPlayerDeath() {
@@ -263,9 +267,9 @@ public class Level {
 			for (int i = 0; i < key.length; i++) {
 				key[i].update(tslf);
 				if (player.getHitbox().isIntersecting(key[i].getHitbox())&&player.getX()<key[i].getX()&&player.hasKey!=null) {
-
 					player.hasKey=key[i];
 					key[i].pickedUp=true;
+					System.out.println("Succesfully picked up");
 				}
 			}
 
@@ -276,6 +280,7 @@ public class Level {
 
 			// Update the camera
 			camera.update(tslf);
+			System.out.println("Level has been updated");
 		}
 	}
 	

@@ -7,22 +7,61 @@ import java.util.List;
 import java.awt.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import gameengine.*;
+import gamelogic.Main;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Toolkit;
+import java.awt.event.KeyEvent;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.*;
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import gameengine.GameBase;
+import gameengine.graphics.MyWindow;
+import gameengine.input.KeyboardInputManager;
+import gameengine.loaders.LeveldataLoader;
+import gamelogic.clientHandling.Information;
+import gamelogic.clientHandling.Server;
+import gamelogic.level.Level;
+import gamelogic.level.LevelData;
+import gamelogic.level.PlayerDieListener;
+import gamelogic.level.PlayerWinListener;
 
 public class Server {
     private static int CURRENT_CONNECTIONS = 0;
-    public static final int LISTENING_PORT = 9876;
+    public static final int LISTENING_PORT = 9877;
     private List<ConnectionHandler> connections = Collections.synchronizedList(new ArrayList<>());
 
-    public Server() {
-        ServerSocket listener;  // Listens for incoming connections.
-        Socket connection;      // For communication with the connecting program.
-        
-        /* Accept and process connections forever, or until some error occurs. */
+    public int getConnections() {
+        return CURRENT_CONNECTIONS;
+    }
+    
 
-        // pre: none
-        // post: the server is running, and is accepting and processing connection requests until some error occurs.  
-        // If an error occurs, a message is printed and the server is shut down.
-        try {
+    public Server() {
+        Main main = new Main();
+		//Server start = new Server();
+
+		ServerSocket listener;  // Listens for incoming connections.
+        Socket connection;      // For communication with the connecting program.
+
+
+
+		System.out.println("Running");
+		new Thread(() -> {
+			while (CURRENT_CONNECTIONS>0) {
+				System.out.println("Starting game...");
+				main.start("Platformer", Main.SCREEN_WIDTH, Main.SCREEN_HEIGHT);
+			}
+		}).start();
+
+
+		try {
             listener = new ServerSocket(LISTENING_PORT);
             System.out.println("Listening on port " + LISTENING_PORT);
             while (true) {
@@ -30,9 +69,17 @@ public class Server {
                 connection = listener.accept();
                 System.out.println("Connection received from " + connection.getInetAddress());
                 ConnectionHandler handler = new ConnectionHandler(connection, CURRENT_CONNECTIONS);
-                connections.add(handler);
+                try {
+					connections.add(handler);
+					System.out.println("A new player exists! Player " + (CURRENT_CONNECTIONS));
+					
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.out.println("Error adding new player: " + e);
+				}
                 CURRENT_CONNECTIONS++;
                 handler.start();
+
             }
         }
         catch (Exception e) {
@@ -50,7 +97,7 @@ public class Server {
      */
     // pre: none
     // post: the thread is running, and is handling the connection with one client.
-    private class ConnectionHandler extends Thread {
+    public class ConnectionHandler extends Thread {
         Socket client;
         ObjectOutputStream oos;
         ObjectInputStream ois;
@@ -68,7 +115,7 @@ public class Server {
                 ois = new ObjectInputStream(client.getInputStream());
                 
                 while (true) {
-                    Information message = (Information) ois.readObject();
+                    Level message = (Level) ois.readObject();
                     System.out.println("Message Received from " + clientAddress);
                     
                     // Broadcast the message to all other clients
@@ -76,7 +123,7 @@ public class Server {
                         for (ConnectionHandler handler : connections) {
                             if (handler != this) {
                                 try {
-                                    handler.oos.writeObject(clientAddress + ": " + message);
+                                    handler.oos.writeObject(message);
                                     System.out.println("Hehe");
                                     handler.oos.flush();
                                     

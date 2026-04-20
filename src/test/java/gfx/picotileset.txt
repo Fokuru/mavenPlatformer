@@ -1,7 +1,7 @@
 Name, X-Pos in tileset, Y-Pos in tileset
 tileSize=32
-0,Air,4,0
-1,Solid,3,3
+0,Air,3,3
+1,Solid,0,0
 2,Spikes_downwards,0,2
 3,Spikes_upwards,2,1
 4,Spikes_rightwards,1,2

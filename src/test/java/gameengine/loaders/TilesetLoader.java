@@ -21,6 +21,9 @@ public class TilesetLoader {
 				int id = Integer.parseInt(values[0].trim());
 				int x = Integer.parseInt(values[2].trim());
 				int y = Integer.parseInt(values[3].trim());
+				//System.out.println("id is "+id);
+				//System.out.println("trying to load tile with x value "+x * tileSize+" width is "+tileSize);
+				//System.out.println(tilesetImage.getWidth());
 				tileset.addImage(values[1], id, tilesetImage.getSubimage(x * tileSize, y * tileSize, tileSize, tileSize));
 				
 			}
