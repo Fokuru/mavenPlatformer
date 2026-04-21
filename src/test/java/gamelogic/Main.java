@@ -56,6 +56,8 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 
 		GameResources.load();
 
+		currentLevel = new ArrayList<>();
+
 		currentLevelIndex = 0;
 
 			levels = new LevelData[4];
@@ -65,7 +67,7 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 				e.printStackTrace();
 			}
 			for (int i = 0; i < server.getConnections(); i++) {
-				currentLevel.set(i, new Level(levels[currentLevelIndex]));
+				currentLevel.add(new Level(levels[currentLevelIndex]));
 				currentLevel.get(i).addPlayerDieListener(this);
 				currentLevel.get(i).addPlayerWinListener(this);
 			}
@@ -135,8 +137,9 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 		numberOfTries = 0;
 		if(currentLevelIndex < levels.length-1) {
 			currentLevelIndex++;
-			for (int i = 0; i < currentLevel.size(); i++) {
-				currentLevel.set(i, new Level(levels[currentLevelIndex]));
+			currentLevel.clear();
+			for (int i = 0; i < server.getConnections(); i++) {
+				currentLevel.add(new Level(levels[currentLevelIndex]));
 				currentLevel.get(i).addPlayerDieListener(this);
 				currentLevel.get(i).addPlayerWinListener(this);
 			}

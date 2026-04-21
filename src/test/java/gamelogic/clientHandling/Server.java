@@ -14,9 +14,6 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.*;
 import java.io.*;
 import java.util.*;
@@ -47,8 +44,8 @@ public class Server {
         Main main = new Main();
 		//Server start = new Server();
 
-		ServerSocket listener;  // Listens for incoming connections.
-        Socket connection;      // For communication with the connecting program.
+		ServerSocket listener = null;  // Listens for incoming connections.
+        Socket connection = null;      // For communication with the connecting program.
 
 
 
@@ -62,8 +59,22 @@ public class Server {
 
 
 		try {
-            listener = new ServerSocket(LISTENING_PORT);
-            System.out.println("Listening on port " + LISTENING_PORT);
+            int port = LISTENING_PORT;
+            while (listener == null) {
+                try {
+                    listener = new ServerSocket(port);
+                } catch (BindException e) {
+                    port++;
+                    if (port > LISTENING_PORT + 10) {
+                        System.out.println("No available ports");
+                        return;
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error creating server socket: " + e);
+                    return;
+                }
+            }
+            System.out.println("Listening on port " + port);
             while (true) {
                   // Accept next connection request and handle it.
                 connection = listener.accept();
@@ -108,14 +119,29 @@ public class Server {
             number = newNum;
         }
         
+        
+
         public void run() {
             String clientAddress = "User " + number;
+            System.out.println("Handling connection with " + clientAddress);
             try {
                 oos = new ObjectOutputStream(client.getOutputStream());
                 ois = new ObjectInputStream(client.getInputStream());
+
+                System.out.println("Streams established with " + clientAddress);
                 
                 while (true) {
-                    Level message = (Level) ois.readObject();
+                    if (ois == null) {
+                        System.out.println("Input stream is null for " + clientAddress);
+                        break;
+                    }
+                    
+                    Level message = null;
+                    try {
+                        message = (Level) ois.readObject();
+                    } catch (EOFException f){
+                        System.out.println ("Ran into an EOF: " + f);
+                    }
                     System.out.println("Message Received from " + clientAddress);
                     
                     // Broadcast the message to all other clients

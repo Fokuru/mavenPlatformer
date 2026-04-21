@@ -4,6 +4,8 @@ import java.awt.Graphics;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -28,7 +30,7 @@ import gamelogic.tiles.Spikes;
 import gamelogic.tiles.Tile;
 import gamelogic.tiles.Button;
 
-public class Level {
+public class Level implements Serializable {
 
 	private LevelData leveldata;
 	private Map map;
@@ -64,6 +66,13 @@ public class Level {
 		try {
 				levels[0] = LeveldataLoader.loadLeveldata("/workspaces/mavenPlatformer/src/test/java/maps/firstLevel.txt");
 				Level newLevel = new Level(levels[0]);
+				while (true) {
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						break;
+					}
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -78,6 +87,7 @@ public class Level {
 		height = mapdata.getHeight();
 		tileSize = mapdata.getTileSize();
 		restartLevel();
+		otherPlayers = new ArrayList<>();
 
         
 
@@ -85,13 +95,29 @@ public class Level {
 		try{
 		System.out.println("Connecting to server...");
         InetAddress host = InetAddress.getLocalHost();
-		System.out.println("Connected to server at: " + host.getHostAddress());
-        Socket socket = new Socket(host, 9877);
-		System.out.println("Connected to server at: " + socket.getInetAddress());
+		System.out.println("Host: " + host.getHostAddress());
+        Socket socket = null;
+        int port = 9877;
+        while (socket == null) {
+            try {
+                socket = new Socket(host, port);
+            } catch (ConnectException e) {
+                port++;
+                if (port > 9877 + 10) {
+                    System.out.println("Cannot connect to server");
+                    return;
+                }
+            }
+        }
+		System.out.println("Connected to server at: " + socket.getInetAddress() + " on port " + port);
         ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
 		System.out.println("Output stream created.");
         ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
 		System.out.println("Input stream created.");
+        
+        oos.writeObject(this);
+        oos.flush();
+        System.out.println("Sent initial level to server.");
         
         
       
