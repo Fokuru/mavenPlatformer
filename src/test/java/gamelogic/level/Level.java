@@ -1,34 +1,26 @@
 package gamelogic.level;
 
 import java.awt.Graphics;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.net.ConnectException;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import gameengine.PhysicsObject;
 import gameengine.graphics.Camera;
-import gameengine.loaders.LeveldataLoader;
 import gameengine.loaders.Mapdata;
 import gameengine.loaders.Tileset;
 import gamelogic.GameResources;
 import gamelogic.Main;
+import gamelogic.clientHandling.Information;
 import gamelogic.key.Key;
+import gamelogic.player.OtherPlayers;
 import gamelogic.player.Player;
-import gamelogic.player.PlayerInput;
 import gamelogic.tiledMap.Map;
+import gamelogic.tiles.Button;
 import gamelogic.tiles.Door;
 import gamelogic.tiles.SolidTile;
 import gamelogic.tiles.Spikes;
 import gamelogic.tiles.Tile;
-import gamelogic.tiles.Button;
 
 public class Level implements Serializable {
 
@@ -36,7 +28,7 @@ public class Level implements Serializable {
 	private Map map;
 	private Key[] key;
 	public Player player;
-	public ArrayList<Player> otherPlayers;
+	public ArrayList<OtherPlayers> otherPlayers;
 	private Camera camera;
 	private boolean keyWin=false;
 
@@ -58,26 +50,6 @@ public class Level implements Serializable {
 	public static float GRAVITY = 70;
 	private Tile[][] tiles;
 
-	public static void main(String[] args) {
-		LevelData[] levels;
-		GameResources.load();
-		levels = new LevelData[4];
-
-		try {
-				levels[0] = LeveldataLoader.loadLeveldata("/workspaces/mavenPlatformer/src/test/java/maps/firstLevel.txt");
-				Level newLevel = new Level(levels[0]);
-				while (true) {
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						break;
-					}
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-	}
-		
 	
 
 	public Level(LevelData leveldata) {
@@ -91,104 +63,6 @@ public class Level implements Serializable {
 
         
 
-		//get the localhost IP address, if server is running on some other IP, you need to use that
-		try{
-		System.out.println("Connecting to server...");
-        InetAddress host = InetAddress.getLocalHost();
-		System.out.println("Host: " + host.getHostAddress());
-        Socket socket = null;
-        int port = 9877;
-        while (socket == null) {
-            try {
-                socket = new Socket(host, port);
-            } catch (ConnectException e) {
-                port++;
-                if (port > 9877 + 10) {
-                    System.out.println("Cannot connect to server");
-                    return;
-                }
-            }
-        }
-		System.out.println("Connected to server at: " + socket.getInetAddress() + " on port " + port);
-        ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
-		System.out.println("Output stream created.");
-        ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
-		System.out.println("Input stream created.");
-        
-        oos.writeObject(this);
-        oos.flush();
-        System.out.println("Sent initial level to server.");
-        
-        
-      
-    //     System.out.println("Sending request to Socket Server");
-    //     AtomicBoolean running = new AtomicBoolean(true);
-
-    //     // Wait for any player input to start the sending thread
-    //     while ((PlayerInput.isLeftKeyDown() || PlayerInput.isRightKeyDown() || PlayerInput.isJumpKeyDown())) {
-            
-	// 			Level me = this;
-    //             new Thread(() -> {
-	// 			while (running.get()) {
-	// 				try {
-	// 					oos.writeObject(me);
-	// 					oos.flush();
-	// 				} catch (IOException e) {
-	// 					System.out.println("something whent wrong when trying to send");
-	// 				}
-	// 			}
-	// 		}).start();
-	// 	}
-        
-            
-
-    //     // Thread for receiving messages
-    //     new Thread(() -> {
-    //         while (running.get()) {
-    //             if (ois != null) {
-    //                 Level message = null;
-    //                 try {
-    //                     message = (Level) ois.readObject();
-    //                     System.out.println("Received: " + message);
-    //                 } catch (ClassNotFoundException e) {
-    //                     e.printStackTrace();
-    //                 } catch (IOException e) {
-    //                     if (e instanceof java.net.SocketException && "Socket closed".equals(e.getMessage())) {
-    //                         running.set(false);
-    //                         System.out.println("Connection closed.");
-    //                     } else {
-    //                         e.printStackTrace();
-    //                     }
-    //                 }
-					
-	// 				ArrayList<Player> newPlayers = message.otherPlayers;
-	// 				for (int i = 0; i < newPlayers.size(); i++) {
-	// 					if (newPlayers.get(i) == player) {
-	// 						Player newPlayer = message.player;
-	// 						player = newPlayers.get(i);
-	// 						for (int j = 0; j < otherPlayers.size(); j++) {
-	// 							if (otherPlayers.get(j) == newPlayers.get(i)) {
-	// 								otherPlayers.set(j, newPlayers.get(i));
-	// 							}
-	// 						}
-	// 					}
-    //             }
-    //             try {
-    //                 Thread.sleep(100);
-    //             } catch (InterruptedException e) {
-    //                 e.printStackTrace();
-    //             }
-    //         }
-    //     }
-	// }).start();
-	
-	}
-	catch (UnknownHostException e) {
-			System.out.println("Host not found: " + e.getMessage());
-		} catch (IOException e) {
-			System.out.println( "problems connecting to input from server: " + e.getMessage());
-		
-		}
 	}
 
 	public LevelData getLevelData(){
@@ -338,8 +212,10 @@ public class Level implements Serializable {
 	   	 player.draw(g);
 
 		 for (int i = 0; i < otherPlayers.size(); i++) {
-			otherPlayers.get(i).draw(g);
-		 }
+			if (otherPlayers != null) {
+				otherPlayers.get(i).draw(g);
+			}		 
+		}
 
 	   	 // used for debugging
 	   	 if (Camera.SHOW_CAMERA)
@@ -391,7 +267,7 @@ public class Level implements Serializable {
 		return player;
 	}
 
-	public void addPlayer(Player newPlayer) {
+	public void addPlayer(OtherPlayers newPlayer) {
 		otherPlayers.add(newPlayer);
 	}
 	
@@ -404,6 +280,17 @@ public class Level implements Serializable {
 			tiles[spikesList.get(0)][spikesList.get(1)]= new Tile((float)spikesList.get(0), (float)spikesList.get(1), tileSize, null, false, this); // Air
 			spikesList.remove(0);
 			spikesList.remove(0);
+		}
+	}
+
+	public void updateOthers (Information[] changed, int tslf) {
+		for (int i = 0; i < otherPlayers.size(); i++) {
+			if (otherPlayers.get(i) != null && changed[i] != null) {
+				ArrayList<Object> ret = changed[i].getData();
+				otherPlayers.get(i).changeX((Float)ret.get(0), tslf);
+				otherPlayers.get(i).changeY((Float)ret.get(1), tslf);
+				otherPlayers.get(i).changeKey((Key)ret.get(4));
+			}
 		}
 	}
 

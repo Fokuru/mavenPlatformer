@@ -30,67 +30,34 @@ import gamelogic.level.LevelData;
 import gamelogic.level.PlayerDieListener;
 import gamelogic.level.PlayerWinListener;
 
+
+
 public class Server {
-    private static int CURRENT_CONNECTIONS = 0;
-    public static final int LISTENING_PORT = 9877;
-    private List<ConnectionHandler> connections = Collections.synchronizedList(new ArrayList<>());
+ private int CURRENT_CONNECTIONS = 0;
+    public final int LISTENING_PORT = 9877;
+    private  ArrayList<Information> playerData = new ArrayList<Information>();
+    private  List<ConnectionHandler> connections = Collections.synchronizedList(new ArrayList<>());
 
     public int getConnections() {
         return CURRENT_CONNECTIONS;
     }
     
+    public Server(){
+          ServerSocket listener;  // Listens for incoming connections.
+        Socket sock;      // For communication with the connecting program.
 
-    public Server() {
-        Main main = new Main();
-		//Server start = new Server();
+        // Accept and process connections forever, or until some error occurs. 
 
-		ServerSocket listener = null;  // Listens for incoming connections.
-        Socket connection = null;      // For communication with the connecting program.
-
-
-
-		System.out.println("Running");
-		new Thread(() -> {
-			while (CURRENT_CONNECTIONS>0) {
-				System.out.println("Starting game...");
-				main.start("Platformer", Main.SCREEN_WIDTH, Main.SCREEN_HEIGHT);
-			}
-		}).start();
-
-
-		try {
-            int port = LISTENING_PORT;
-            while (listener == null) {
-                try {
-                    listener = new ServerSocket(port);
-                } catch (BindException e) {
-                    port++;
-                    if (port > LISTENING_PORT + 10) {
-                        System.out.println("No available ports");
-                        return;
-                    }
-                } catch (Exception e) {
-                    System.out.println("Error creating server socket: " + e);
-                    return;
-                }
-            }
-            System.out.println("Listening on port " + port);
+        try {
+            listener = new ServerSocket(LISTENING_PORT);
+            System.out.println("Listening on port " + LISTENING_PORT);
             while (true) {
-                  // Accept next connection request and handle it.
-                connection = listener.accept();
-                System.out.println("Connection received from " + connection.getInetAddress());
-                ConnectionHandler handler = new ConnectionHandler(connection, CURRENT_CONNECTIONS);
-                try {
-					connections.add(handler);
-					System.out.println("A new player exists! Player " + (CURRENT_CONNECTIONS));
-					
-				} catch (Exception e) {
-					e.printStackTrace();
-					System.out.println("Error adding new player: " + e);
-				}
+                sock = listener.accept();
+                // Accept next connection request and handle it.
+                ConnectionHandler h = new ConnectionHandler(sock, CURRENT_CONNECTIONS);
                 CURRENT_CONNECTIONS++;
-                handler.start();
-
+                h.start();
+                 
             }
         }
         catch (Exception e) {
@@ -98,8 +65,12 @@ public class Server {
             System.out.println("Error:  " + e);
             return;
         }
-
     }
+      public static void main(String[] args) {
+        new Server();
+      
+    }  // end main()
+    
 
 
     /**
@@ -122,6 +93,7 @@ public class Server {
         
 
         public void run() {
+            connections.add(this);
             String clientAddress = "User " + number;
             System.out.println("Handling connection with " + clientAddress);
             try {
@@ -136,12 +108,15 @@ public class Server {
                         break;
                     }
                     
-                    Level message = null;
+                    Information message = null;
                     try {
-                        message = (Level) ois.readObject();
+                        message = (Information) ois.readObject();
                     } catch (EOFException f){
                         System.out.println ("Ran into an EOF: " + f);
                     }
+
+                    playerData.set(number, message);
+
                     System.out.println("Message Received from " + clientAddress);
                     
                     // Broadcast the message to all other clients
@@ -149,7 +124,7 @@ public class Server {
                         for (ConnectionHandler handler : connections) {
                             if (handler != this) {
                                 try {
-                                    handler.oos.writeObject(message);
+                                    handler.oos.writeObject(playerData);
                                     System.out.println("Hehe");
                                     handler.oos.flush();
                                     

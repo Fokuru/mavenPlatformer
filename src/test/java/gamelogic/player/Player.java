@@ -39,7 +39,6 @@ public class Player extends PhysicsObject{
 		int offset =(int)(level.getLevelData().getTileSize()*0.1); //hitbox is offset by 10% of the player size.
 		this.hitbox = new RectHitbox(this, offset,offset, width -offset, height - offset);
 		holder = level;
-		myInfo = new Information((int)x, (int)y, width-offset, height-offset);
 
 		int r = (int)(Math.random()*255);
 		int g = (int)(Math.random()*255);
@@ -47,6 +46,8 @@ public class Player extends PhysicsObject{
 		colors[0] = r;
 		colors[1] = g;
 		colors[2] = b;
+
+		myInfo = new Information((Float)super.getX(), (Float)super.getY(), width-offset, height-offset, hasKey, colors);
 	}
 
 	@Override
@@ -105,7 +106,7 @@ public class Player extends PhysicsObject{
 
 		isJumping = true;
 		if(collisionMatrix[BOT] != null) isJumping = false;
-		myInfo.changeInfo((int)getX(), (int)getY(), (int)hitbox.getX(), (int)hitbox.getY());
+		myInfo.changeInfo((Float)super.getX(), (Float)super.getY(), (int)hitbox.getX(), (int)hitbox.getY(), hasKey, colors);
 	}
 
 	public void switchMovement(boolean toWhat){

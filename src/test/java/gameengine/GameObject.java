@@ -51,4 +51,12 @@ public class GameObject {
 	public void setPosition(Vector2D newPos){
 		position = newPos;
 	}
+
+	public void newX (Float x) {
+		position.x = x;
+	}
+
+	public void newY (Float y) {
+		position.x = y;
+	}
 }
