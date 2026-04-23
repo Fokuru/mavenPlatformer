@@ -44,7 +44,7 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 
 		levels = new LevelData[2];
 		try {
-			levels[0] = LeveldataLoader.loadLeveldata(".\\maps\\firstLevel.txt");
+			levels[0] = LeveldataLoader.loadLeveldata("/workspaces/mavenPlatformer/src/test/java/maps/firstLevel.txt");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

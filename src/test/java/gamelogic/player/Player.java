@@ -74,7 +74,7 @@ public class Player extends PhysicsObject{
 			isJumping = true;
 		}
 
-		// Checks if the Q key is down and then teleports if it has been more than 1 second sense last teleport.
+		// Checks if the Q key is down and then teleports if it has been more than 1 second since last teleport.
 		// if(PlayerInput.isQKeyDown()) {
 			
 		// 	if (System.currentTimeMillis()-started >= 1000){
