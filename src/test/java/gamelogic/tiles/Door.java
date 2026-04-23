@@ -14,7 +14,13 @@ public class Door extends Tile{
 
 	@Override
 	public void update(float tslf) {
+		if((level.getKeyWin()==(level.getPlayer().hasKey!=null))){
+			
+		}
 		if(hitbox.isIntersecting(level.player.getHitbox())&&(level.getKeyWin()==(level.getPlayer().hasKey!=null))) level.onPlayerWin();
 	}
 	
+	public void setImage(BufferedImage image) {
+		setImage(image);
+	}
 }

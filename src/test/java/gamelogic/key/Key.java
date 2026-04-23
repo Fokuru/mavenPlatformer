@@ -35,10 +35,10 @@ public class Key extends PhysicsObject {
 
     public Key (float x, float y, Level level){
 		super(x, y, 120, 120, level);
+		System.out.println("e");
 		movementVector.x = 0;
 		this.hitbox = new RectHitbox(this, 10, 10, width - 10, height - 10);
     }
-
 
     public void update(float tslf) {
 		if(level.getPlayer().getKey()!=null&&pickedUp) {

@@ -12,6 +12,12 @@ import gamelogic.level.LevelData;
 import gamelogic.level.PlayerDieListener;
 import gamelogic.level.PlayerWinListener;
 
+import java.net.*;
+import java.io.*;
+import java.util.*;
+import java.util.List;
+import java.awt.*;
+
 public class Main extends GameBase implements PlayerDieListener, PlayerWinListener, ScreenTransitionListener{
 
 	public static final int SCREEN_WIDTH = 1280;
@@ -36,15 +42,32 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 		main.start("Eden Jump", SCREEN_WIDTH, SCREEN_HEIGHT);
 	}
 
+	public Main(){
+		 try {
+        //get the localhost IP address, if server is running on some other IP, you need to use that
+        InetAddress host = InetAddress.getLocalHost();
+        	Socket socket = new Socket(host.getHostName(), 9876);
+            //write to socket using ObjectOutputStream
+        	ObjectOutputStream   oos = new ObjectOutputStream(socket.getOutputStream());
+       
+			ObjectInputStream   ois = new ObjectInputStream(socket.getInputStream());
+    			
+        	} catch (Exception w){
+				
+			};
+	}
+
 	@Override
 	public void init() {
 		GameResources.load();
 
 		currentLevelIndex = 0;
 
-		levels = new LevelData[2];
+		levels = new LevelData[3];
 		try {
 			levels[0] = LeveldataLoader.loadLeveldata("/workspaces/mavenPlatformer/src/test/java/maps/firstLevel.txt");
+			levels[1] = LeveldataLoader.loadLeveldata("/workspaces/mavenPlatformer/src/test/java/maps/secondLevel.txt");
+			levels[2] = LeveldataLoader.loadLeveldata("/workspaces/mavenPlatformer/src/test/java/maps/thirdLevel.txt");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -146,4 +169,19 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 		g.setColor(Color.WHITE);
 		g.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	}
+
+	public class ClientStuff extends Thread{
+		ObjectInputStream ois;
+		ObjectOutputStream oos;
+
+		public ClientStuff(ObjectInputStream i, ObjectOutputStream o){
+			ois=i;
+			oos=o;
+		}
+
+		public void run(){
+
+		}
+	}
+
 }

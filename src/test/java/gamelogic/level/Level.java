@@ -38,6 +38,7 @@ public class Level implements Serializable {
 	private ArrayList<Key> keys = new ArrayList<>();
 
 	private ArrayList<Integer> spikesList = new ArrayList<>();
+	public ArrayList<Integer> doorList = new ArrayList<>();
 
 	private List<PlayerDieListener> dieListeners = new ArrayList<>();
 	private List<PlayerWinListener> winListeners = new ArrayList<>();
@@ -83,7 +84,7 @@ public class Level implements Serializable {
 
 				tiles[x][y] = new Tile(xPosition, yPosition, tileSize, null, false, this);
 				if (values[x][y] == 0){
-					tiles[x][y] = new Tile(xPosition, yPosition, tileSize, null, false, this); // Air
+					tiles[x][y] = new Tile(xPosition, yPosition, tileSize,tileset.getImage("Air"), false, this); // Air
 				}else if (values[x][y] == 1){
 					tiles[x][y] = new SolidTile(xPosition, yPosition, tileSize, tileset.getImage("Solid"), this);
 
@@ -106,12 +107,14 @@ public class Level implements Serializable {
 				
 				}else if (values[x][y] == 9){
 					tiles[x][y] = new Door(xPosition, yPosition, tileSize, tileset.getImage("Door_closed"), this);
-				
+					doorList.add(x);
+					doorList.add(y);
 				}else if (values[x][y] == 10) {
 					keys.add(new Key(xPosition*tileSize, yPosition*tileSize, null));
 					keyWin=true;
+					tiles[x][y] = new Tile(xPosition, yPosition, tileSize,tileset.getImage("Air"), false, this);
 				}else if (values[x][y] == 15){
-					tiles[x][y] = new Button(xPosition, yPosition, tileSize, tileset.getImage("Solid_middle"), this, false);
+					tiles[x][y] = new Button(xPosition, yPosition, tileSize, tileset.getImage("Button_up"), this, false);
 				}
 
 			}
@@ -164,9 +167,10 @@ public class Level implements Serializable {
 			if (player.getCollisionMatrix()[PhysicsObject.RIG] instanceof Spikes)
 				onPlayerDeath();
 			
+			
 			for (int i = 0; i < key.length; i++) {
 				key[i].update(tslf);
-				if (player.getHitbox().isIntersecting(key[i].getHitbox())&&player.getX()<key[i].getX()&&player.hasKey!=null) {
+				if (player.getHitbox().isIntersecting(key[i].getHitbox())&&player.hasKey!=null) {
 					player.hasKey=key[i];
 					key[i].pickedUp=true;
 					System.out.println("Succesfully picked up");
@@ -180,7 +184,6 @@ public class Level implements Serializable {
 
 			// Update the camera
 			camera.update(tslf);
-			System.out.println("Level has been updated");
 		}
 	}
 	
@@ -277,7 +280,7 @@ public class Level implements Serializable {
 	
 	public void removeSpikes(){
 		while(spikesList.size()!=0){
-			tiles[spikesList.get(0)][spikesList.get(1)]= new Tile((float)spikesList.get(0), (float)spikesList.get(1), tileSize, null, false, this); // Air
+			tiles[spikesList.get(0)][spikesList.get(1)]= new Tile((float)spikesList.get(0), (float)spikesList.get(1), tileSize, tileset.getImage("Air"), false, this);
 			spikesList.remove(0);
 			spikesList.remove(0);
 		}
