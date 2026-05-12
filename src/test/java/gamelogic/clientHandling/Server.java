@@ -96,58 +96,102 @@ public class Server {
             connections.add(this);
             String clientAddress = "User " + number;
             System.out.println("Handling connection with " + clientAddress);
+
             try {
                 oos = new ObjectOutputStream(client.getOutputStream());
                 ois = new ObjectInputStream(client.getInputStream());
 
                 System.out.println("Streams established with " + clientAddress);
-                
+
                 while (true) {
-                    if (ois == null) {
-                        System.out.println("Input stream is null for " + clientAddress);
-                        break;
-                    }
-                    
-                    Information message = null;
+
+                    // --- RECEIVE PLAYER UPDATE ---
+                    Information message;
                     try {
                         message = (Information) ois.readObject();
-                    } catch (EOFException f){
-                        System.out.println ("Ran into an EOF: " + f);
+                    } catch (EOFException eof) {
+                        System.out.println("Client disconnected cleanly: " + clientAddress);
+                        break;
                     }
 
-                    playerData.set(number, message);
+                    if (message == null) {
+                        System.out.println("Received null message from " + clientAddress);
+                        break;
+                    }
 
-                    System.out.println("Message Received from " + clientAddress);
-                    
-                    // Broadcast the message to all other clients
+                    message.setId(number);
+
+                    // Store/update this player's data
+                    synchronized (playerData) {
+                        while (playerData.size() <= number) {
+                            playerData.add(null);
+                        }
+                        playerData.set(number, message);
+                    }
+
+                    System.out.println("Received update from " + clientAddress +
+                                    "  id=" + number +
+                                    "  x=" + message.getMyX() +
+                                    "  y=" + message.getMyY());
+
+                    // --- BROADCAST TO ALL CLIENTS ---
                     synchronized (connections) {
                         for (ConnectionHandler handler : connections) {
-                            if (handler != this) {
-                                try {
-                                    handler.oos.writeObject(playerData);
-                                    System.out.println("Hehe");
-                                    handler.oos.flush();
-                                    
-                                } catch (IOException e) {
-                                    System.out.println("Error sending to client: " + e);
+
+                            List<Information> list = new ArrayList<>();
+
+                            synchronized (playerData) {
+                                for (int i = 0; i < playerData.size(); i++) {
+                                    if (i == handler.number) continue; // skip self
+                                    Information info = playerData.get(i);
+                                    if (info != null) {
+                                        list.add(info);
+                                    }
                                 }
+                            }
+
+                            Information[] others = list.toArray(new Information[0]);
+
+                            // Debug print
+                            System.out.println("Sending " + others.length +
+                                            " others to client " + handler.number);
+                            for (Information info : others) {
+                                System.out.println("   -> id=" + info.getId() +
+                                                " x=" + info.getMyX() +
+                                                " y=" + info.getMyY());
+                            }
+
+                            try {
+                                handler.oos.reset();
+                                handler.oos.writeObject(others);
+                                handler.oos.flush();
+                            } catch (IOException e) {
+                                System.out.println("Error sending to client " +
+                                                handler.number + ": " + e);
                             }
                         }
                     }
                 }
-            }
-            catch (Exception e) {
-                System.out.println("Error on connection with: " + clientAddress + ": " + e);
+
+            } catch (Exception e) {
+                System.out.println("Error on connection with " + clientAddress + ": " + e);
+
             } finally {
-                // Remove this handler from the list when connection closes
+                // Remove this handler from active connections
                 synchronized (connections) {
                     connections.remove(this);
                 }
+
+                // Mark this player's slot as empty
+                synchronized (playerData) {
+                    if (number < playerData.size()) {
+                        playerData.set(number, null);
+                    }
+                }
+
                 try {
                     client.close();
-                } catch (IOException e) {
-                    // Ignore
-                }
+                } catch (IOException ignored) {}
             }
         }
     }

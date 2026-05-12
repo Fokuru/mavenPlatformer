@@ -23,6 +23,7 @@ public final class MouseInputManager implements MouseInputListener, MouseWheelLi
 	private static float mouseX;
 	private static float mouseY;
 	
+	@SuppressWarnings("unused")
 	private MyWindow window;
 	
 	public MouseInputManager(MyWindow window) {
@@ -73,14 +74,14 @@ public final class MouseInputManager implements MouseInputListener, MouseWheelLi
 		int button = mouseEvent.getButton();
 		if(button >= 0 && button < mousebutton.length) mousebutton[button] = true;
 		
-		mouseX = mouseEvent.getX() - window.getInsetX();
-		mouseY = mouseEvent.getY() - window.getInsetY();
+		mouseX = mouseEvent.getX() - MyWindow.getInsetX();
+		mouseY = mouseEvent.getY() - MyWindow.getInsetY();
 	}
 
 	@Override
 	public void mouseMoved(MouseEvent mouseEvent) {
-		mouseX = mouseEvent.getX() - window.getInsetX();
-		mouseY = mouseEvent.getY() - window.getInsetY();
+		mouseX = mouseEvent.getX() - MyWindow.getInsetX();
+		mouseY = mouseEvent.getY() - MyWindow.getInsetY();
 	}
 
 	@Override

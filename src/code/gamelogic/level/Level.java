@@ -193,12 +193,13 @@ catch (UnknownHostException e) {
 
 		}
 
+			System.out.println("Adding Keys");
 			key = new Key[keys.size()];
 			map = new Map(width, height, tileSize, tiles);
 			camera = new Camera(Main.SCREEN_WIDTH, Main.SCREEN_HEIGHT, 0, map.getFullWidth(), map.getFullHeight());
-			// for (int i = 0; i < keysList.size(); i++) {
-			// 	key[i] = new Key(keys.get(i).getX(), keys.get(i).getY(), this);
-			// }
+			for (int i = 0; i < keysList.size(); i++) {
+				key[i] = new Key(keys.get(i).getX(), keys.get(i).getY(), this);
+			}
 			player = new Player(leveldata.getPlayerX() * map.getTileSize(), leveldata.getPlayerY() * map.getTileSize(),
 					this);
 			camera.setFocusedObject(player);
@@ -239,10 +240,12 @@ catch (UnknownHostException e) {
 				onPlayerDeath();
 			
 			for (int i = 0; i < key.length; i++) {
+				System.out.println("Checking Key " + i);
 				key[i].update(tslf);
 				if (player.getHitbox().isIntersecting(key[i].getHitbox())&&player.getX()<key[i].getX()) {
 					// player.hasKey=true; // HasKey gives the player a key, or somethin'????
 					key[i].pickedUp=true;
+					System.out.println("Key Picked Up");
 				}
 			}
 
@@ -259,7 +262,7 @@ catch (UnknownHostException e) {
 			// Update the camera
 			camera.update(tslf);
 		}
-	}
+	
 	
 	
 

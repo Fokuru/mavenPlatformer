@@ -3,7 +3,9 @@ package gamelogic.level;
 import java.awt.Graphics;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import gameengine.PhysicsObject;
 import gameengine.graphics.Camera;
@@ -15,7 +17,6 @@ import gamelogic.clientHandling.Information;
 import gamelogic.key.Key;
 import gamelogic.player.OtherPlayers;
 import gamelogic.player.Player;
-import gamelogic.tiledMap.Map;
 import gamelogic.tiles.Button;
 import gamelogic.tiles.Door;
 import gamelogic.tiles.SolidTile;
@@ -25,10 +26,10 @@ import gamelogic.tiles.Tile;
 public class Level implements Serializable {
 
 	private LevelData leveldata;
-	private Map map;
+	private gamelogic.tiledMap.Map map;
 	private Key[] key;
 	public Player player;
-	public ArrayList<OtherPlayers> otherPlayers;
+	public Map<Integer, OtherPlayers> otherPlayers;
 	private Camera camera;
 	private boolean keyWin=false;
 
@@ -51,7 +52,7 @@ public class Level implements Serializable {
 	public static float GRAVITY = 70;
 	private Tile[][] tiles;
 
-	
+	public boolean buttonAlreadyActivated = false;
 
 	public Level(LevelData leveldata) {
 		this.leveldata = leveldata;
@@ -60,7 +61,7 @@ public class Level implements Serializable {
 		height = mapdata.getHeight();
 		tileSize = mapdata.getTileSize();
 		restartLevel();
-		otherPlayers = new ArrayList<>();
+		otherPlayers = new HashMap<>();
 
         
 
@@ -76,6 +77,7 @@ public class Level implements Serializable {
 		tiles = new Tile[width][height];
 
 		for (int x = 0; x < width; x++) {
+			buttonAlreadyActivated = false;
 			int xPosition = x;
 			for (int y = 0; y < height; y++) {
 				int yPosition = y;
@@ -118,22 +120,25 @@ public class Level implements Serializable {
 				}
 
 			}
-
-			key = new Key[keys.size()];
-			map = new Map(width, height, tileSize, tiles);
+			map = new gamelogic.tiledMap.Map(width, height, tileSize, tiles);
 			camera = new Camera(Main.SCREEN_WIDTH, Main.SCREEN_HEIGHT, 0, map.getFullWidth(), map.getFullHeight());
-			 for (int i = 0; i < keys.size(); i++) {
-			 	key[i] = new Key(keys.get(i).getX(), keys.get(i).getY(), this);
-			 }
+			
 			player = new Player(leveldata.getPlayerX() * map.getTileSize(), leveldata.getPlayerY() * map.getTileSize(),
 					this);
 			camera.setFocusedObject(player);
+			player.myInfo.setWon(false);
 
 			active = true;
 			playerDead = false;
 			playerWin = false;
-
+			player.hasSentWin = false;
+			player.myInfo.setButtonPressed(false);
 			
+		}
+
+		key = new Key[keys.size()];
+		for (int i = 0; i < keys.size(); i++) {
+			key[i] = new Key(keys.get(i).getX(), keys.get(i).getY(), this);
 		}
 		System.out.println("Level succesful creation");
 	}
@@ -145,8 +150,12 @@ public class Level implements Serializable {
 	}
 
 	public void onPlayerWin() {
+		if (playerWin) return;
 		active = false;
 		playerWin = true;
+		if (player != null && player.myInfo != null) {
+        	player.myInfo.setWon(true);
+		}
 		throwPlayerWinEvent();
 	}
 
@@ -169,8 +178,9 @@ public class Level implements Serializable {
 			
 			
 			for (int i = 0; i < key.length; i++) {
+				//System.out.println("Checking for key");
 				key[i].update(tslf);
-				if (player.getHitbox().isIntersecting(key[i].getHitbox())&&player.hasKey!=null) {
+				if (player.getHitbox().isIntersecting(key[i].getHitbox())&&player.hasKey==null) {
 					player.hasKey=key[i];
 					key[i].pickedUp=true;
 					System.out.println("Succesfully picked up");
@@ -214,10 +224,10 @@ public class Level implements Serializable {
 	   	 // Draw the player
 	   	 player.draw(g);
 
-		 for (int i = 0; i < otherPlayers.size(); i++) {
-			if (otherPlayers != null) {
-				otherPlayers.get(i).draw(g);
-			}		 
+		for (OtherPlayers remote : otherPlayers.values()) {
+			if (remote != null) {
+				remote.draw(g);
+			}
 		}
 
 	   	 // used for debugging
@@ -262,7 +272,7 @@ public class Level implements Serializable {
 		return playerWin;
 	}
 
-	public Map getMap() {
+	public gamelogic.tiledMap.Map getMap() {
 		return map;
 	}
 
@@ -270,10 +280,28 @@ public class Level implements Serializable {
 		return player;
 	}
 
-	public void addPlayer(OtherPlayers newPlayer) {
-		otherPlayers.add(newPlayer);
+	public void addPlayer(int id, OtherPlayers newPlayer) {
+		otherPlayers.put(id, newPlayer);
 	}
-	
+
+	public void handleRemotePlayer(Information info) {
+		if (info == null || info.getId() < 0) {
+			return;
+		}
+
+		OtherPlayers remote = otherPlayers.get(info.getId());
+		if (remote == null) {
+			remote = new OtherPlayers(info.getMyX(), info.getMyY(), this, info.getColors());
+			remote.setId(info.getId());
+			otherPlayers.put(info.getId(), remote);
+		} else {
+			remote.changeX(info.getMyX(), 0);
+			remote.changeY(info.getMyY(), 0);
+			remote.changeKey(info.getKey());
+		}
+	}
+
+
 	public boolean getKeyWin(){
 		return keyWin;
 	}
@@ -284,15 +312,13 @@ public class Level implements Serializable {
 			spikesList.remove(0);
 			spikesList.remove(0);
 		}
+		player.myInfo.setButtonPressed(true);
 	}
 
-	public void updateOthers (Information[] changed, int tslf) {
-		for (int i = 0; i < otherPlayers.size(); i++) {
-			if (otherPlayers.get(i) != null && changed[i] != null) {
-				ArrayList<Object> ret = changed[i].getData();
-				otherPlayers.get(i).changeX((Float)ret.get(0), tslf);
-				otherPlayers.get(i).changeY((Float)ret.get(1), tslf);
-				otherPlayers.get(i).changeKey((Key)ret.get(4));
+	public void updateOthers (Information[] others, int tslf) {
+		for (Information info : others) {
+			if (info != null) {
+				handleRemotePlayer(info);
 			}
 		}
 	}

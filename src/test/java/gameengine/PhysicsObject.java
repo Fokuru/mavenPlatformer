@@ -80,9 +80,10 @@ public class PhysicsObject extends GameObject{
 		float topSide = hitbox.getY();
 		float botSide = hitbox.getY() + hitbox.getHeight();
 		
-		for (int i = 0; i < level.getMap().getWidth(); i++) {
-			for (int j = 0; j < level.getMap().getHeight(); j++) {
-				Tile tile = level.getMap().getTiles()[i][j];
+		Tile[][] tiles = level.getMap().getTiles();
+		for (int i = 0; i < tiles.length; i++) {
+			for (int j = 0; j < tiles[i].length; j++) {
+				Tile tile = tiles[i][j];
 				if(!tile.isSolid()) continue;
 				RectHitbox obstacle = tile.getHitbox();
 				if(obstacle == null) continue;

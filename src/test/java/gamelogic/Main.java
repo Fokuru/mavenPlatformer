@@ -3,20 +3,22 @@ package gamelogic;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
+import java.io.EOFException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.InetAddress;
+import java.net.Socket;
 
 import gameengine.GameBase;
 import gameengine.input.KeyboardInputManager;
 import gameengine.loaders.LeveldataLoader;
+import gamelogic.clientHandling.Information;
 import gamelogic.level.Level;
 import gamelogic.level.LevelData;
 import gamelogic.level.PlayerDieListener;
 import gamelogic.level.PlayerWinListener;
-
-import java.net.*;
-import java.io.*;
-import java.util.*;
-import java.util.List;
-import java.awt.*;
+import gamelogic.player.Player;
 
 public class Main extends GameBase implements PlayerDieListener, PlayerWinListener, ScreenTransitionListener{
 
@@ -36,6 +38,11 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 	private long levelFinishTime;
 	
 	private LevelCompleteBar levelCompleteBar;
+	private Socket socket;
+	private ObjectOutputStream oos;
+	private ObjectInputStream ois;
+
+
 	
 	public static void main(String[] args) {
 		Main main = new Main();
@@ -43,18 +50,16 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 	}
 
 	public Main(){
-		 try {
-        //get the localhost IP address, if server is running on some other IP, you need to use that
-        InetAddress host = InetAddress.getLocalHost();
-        	Socket socket = new Socket(host.getHostName(), 9876);
-            //write to socket using ObjectOutputStream
-        	ObjectOutputStream   oos = new ObjectOutputStream(socket.getOutputStream());
-       
-			ObjectInputStream   ois = new ObjectInputStream(socket.getInputStream());
-    			
-        	} catch (Exception w){
-				
-			};
+		try {
+			// get the localhost IP address; if the server runs elsewhere, use that IP
+			InetAddress host = InetAddress.getLocalHost();
+			socket = new Socket(host.getHostName(), 9877);
+			// write to socket using ObjectOutputStream
+			oos = new ObjectOutputStream(socket.getOutputStream());
+			ois = new ObjectInputStream(socket.getInputStream());
+		} catch (Exception w) {
+			System.out.println(w);
+		}
 	}
 
 	@Override
@@ -84,6 +89,8 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 		levelStartTime = System.currentTimeMillis();
 		
 		levelCompleteBar = new LevelCompleteBar(100, 10, SCREEN_WIDTH - 200, 10, currentLevel.getPlayer());
+		new ClientStuff(ois, oos).start();
+
 	}
 	
 	//-----------------------------------------------------Screen Transition Listener
@@ -126,6 +133,7 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 		screenTransition.showVictorySceen(levelFinishTime - levelStartTime);
 		
 		active = false;
+		
 	}
 
 	private void changeLevel() {
@@ -137,20 +145,48 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 			currentLevel.addPlayerDieListener(this);
 			currentLevel.addPlayerWinListener(this);
 			levelCompleteBar = new LevelCompleteBar(100, 10, SCREEN_WIDTH - 200, 10, currentLevel.getPlayer());
+			currentLevel.getPlayer().myInfo.setWon(false);
+			currentLevel.getPlayer().myInfo.setButtonPressed(false); 
+			currentLevel.buttonAlreadyActivated = false;
 		}
 	}
 
 	@Override
 	public void update(float tslf) {
-		if(KeyboardInputManager.isKeyDown(KeyEvent.VK_N)) init();
-		if(KeyboardInputManager.isKeyDown(KeyEvent.VK_ESCAPE)) System.exit(0);
+		if (KeyboardInputManager.isKeyDown(KeyEvent.VK_N)) init();
+		if (KeyboardInputManager.isKeyDown(KeyEvent.VK_ESCAPE)) System.exit(0);
 
-		if (active) currentLevel.update(tslf);
+		if (active) {
+			currentLevel.update(tslf);
+		}
+
+		Information info = currentLevel.getPlayer().myInfo;
+		Player p = currentLevel.getPlayer();
+		info.setLevelIndex(currentLevelIndex);
+
+		boolean shouldSend =
+			currentLevel.isActive() ||
+			(info.hasWon() && !p.hasSentWin);
+
+		if (shouldSend) {
+			try {
+				oos.reset();
+				oos.writeObject(info);
+				oos.flush();
+
+				if (info.hasWon()) {
+					p.hasSentWin = true;
+				}
+
+			} catch (IOException e) {
+				System.out.println("Failed to send player info: " + e.getMessage());
+			}
+		}
 
 		screenTransition.update(tslf);
-		
 		levelCompleteBar.update(tslf);
 	}
+
 
 	@Override
 	public void draw(Graphics g) {
@@ -171,16 +207,59 @@ public class Main extends GameBase implements PlayerDieListener, PlayerWinListen
 	}
 
 	public class ClientStuff extends Thread{
-		ObjectInputStream ois;
-		ObjectOutputStream oos;
+		private final ObjectInputStream ois;
+		@SuppressWarnings("unused")
+		private final ObjectOutputStream oos;
 
 		public ClientStuff(ObjectInputStream i, ObjectOutputStream o){
-			ois=i;
-			oos=o;
+			this.ois = i;
+			this.oos = o;
 		}
 
+		@Override
 		public void run(){
+			while (true) {
+				try {
+					Information[] others = (Information[]) ois.readObject();
+					System.out.println("Received data for " + others.length + " other players");
+					for (Information info : others) {
+						System.out.println("  client got id=" + info.getId() +
+										" x=" + info.getMyX() +
+										" y=" + info.getMyY());
+					}
 
+					for (Information info : others) {
+						if (info != null &&
+							info.hasWon() &&
+							info.getLevelIndex() == currentLevelIndex &&  
+							!currentLevel.isPlayerWin()) {                 
+							currentLevel.onPlayerWin();
+							break; // no need to check more
+						}
+					}
+
+					for (Information info : others) {
+						if (info != null &&
+						info.isButtonPressed() &&
+						currentLevelIndex == info.getLevelIndex() &&
+						!currentLevel.buttonAlreadyActivated) {
+
+						currentLevel.removeSpikes();
+						currentLevel.buttonAlreadyActivated = true;
+					}
+
+					}
+
+					currentLevel.updateOthers(others, 0);
+
+				} catch (EOFException e) {
+					System.out.println("Server closed the connection: " + e.getMessage());
+					break;
+				} catch (Exception e) {
+					e.printStackTrace();
+					break;
+				}
+			}
 		}
 	}
 

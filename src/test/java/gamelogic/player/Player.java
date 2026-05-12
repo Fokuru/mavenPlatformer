@@ -28,10 +28,13 @@ public class Player extends PhysicsObject{
 	public Information myInfo;
 	public Key hasKey = null;
 
+	@SuppressWarnings("unused")
 	private Level holder;
 	private boolean isJumping = false;
 	private boolean neg = false;
 	private int[] colors = {255, 255, 0};
+
+	public boolean hasSentWin = false;
 
 	public Player(float x, float y, Level level) {
 	
@@ -47,7 +50,9 @@ public class Player extends PhysicsObject{
 		colors[1] = g;
 		colors[2] = b;
 
-		myInfo = new Information((Float)super.getX(), (Float)super.getY(), width-offset, height-offset, hasKey, colors);
+		myInfo = new Information((Float)super.getX(), (Float)super.getY(), hasKey, colors);
+		myInfo.setWon(false); 
+    	hasSentWin = false;
 	}
 
 	@Override
@@ -106,7 +111,7 @@ public class Player extends PhysicsObject{
 
 		isJumping = true;
 		if(collisionMatrix[BOT] != null) isJumping = false;
-		myInfo.changeInfo((Float)super.getX(), (Float)super.getY(), (int)hitbox.getX(), (int)hitbox.getY(), hasKey, colors);
+		myInfo.changeInfo((Float)super.getX(), (Float)super.getY(), hasKey, colors);
 	}
 
 	public void switchMovement(boolean toWhat){

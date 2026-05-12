@@ -26,7 +26,7 @@ public class LevelCompleteBar {
 	}
 
 	public void update(float tslf) {
-		Map map = player.getLevel().getMap();
+		gamelogic.tiledMap.Map map = player.getLevel().getMap();
 		if(map != null) {
 			this.levelComplete = (player.getX() / map.getFullWidth());
 		}

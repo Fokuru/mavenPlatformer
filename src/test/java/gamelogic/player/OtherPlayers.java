@@ -20,55 +20,49 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
-public class OtherPlayers extends PhysicsObject {
-    private int[] colors = {255, 255, 0};
+public class OtherPlayers {
+
+    private float x, y;
+    private int id = -1;
+    private int[] colors;
+    Level level;
     private Key hasKey = null;
-    public Information myInfo;
-    
-    public OtherPlayers(float x, float y, Level level, int[] newColors) {
-        super(x, y, level.getLevelData().getTileSize(), level.getLevelData().getTileSize(), level);
-        colors = newColors;
-        int offset =(int)(level.getLevelData().getTileSize()*0.1);
-        this.hitbox = new RectHitbox(this, offset,offset, width -offset, height - offset);
-        myInfo = new Information((Float)super.getX(), (Float)super.getY(), width-offset, height-offset, hasKey, colors);
+
+    public OtherPlayers(float x, float y, Level newLevel, int[] newColors) {
+        this.x = x;
+        this.y = y;
+        this.colors = newColors;
+        level = newLevel;  
     }
 
-    @Override
-	public void draw(Graphics g) {
-		g.setColor(new Color(colors[0], colors[1], colors[2]));
-		MyGraphics.fillRectWithOutline(g, (int)getX(), (int)getY(), width, height);
-		
-		if(Main.DEBUGGING) {
-			for (int i = 0; i < closestMatrix.length; i++) {
-				Tile t = closestMatrix[i];
-				if(t != null) {
-					g.setColor(Color.RED);
-					g.drawRect((int)t.getX(), (int)t.getY(), t.getSize(), t.getSize());
-				}
-			}
-		}
-		
-		hitbox.draw(g);
-	}
-
-    public void changeX (Float x, float tslf) {
-        super.newX(x);
-        updateCollisionMatrix(tslf);
-        int offset =(int)(level.getLevelData().getTileSize()*0.1);
-        myInfo = new Information((Float)super.getX(), (Float)super.getY(), width-offset, height-offset, hasKey, colors);
+    public void draw(Graphics g) {
+        g.setColor(new Color(colors[0], colors[1], colors[2]));
+        MyGraphics.fillRectWithOutline(g, (int)x, (int)y, 
+                                       level.getLevelData().getTileSize(),
+                                       level.getLevelData().getTileSize());
     }
 
-    public void changeY (Float y, float tslf) {
-        super.newY(y);
-        updateCollisionMatrix(tslf);
-        int offset =(int)(level.getLevelData().getTileSize()*0.1);
-        myInfo = new Information((Float)super.getX(), (Float)super.getY(), width-offset, height-offset, hasKey, colors);
+    public void changeX(Float x, float tslf) {
+        this.x = x;
     }
 
-    public void changeKey (Key key) {
+    public void changeY(Float y, float tslf) {
+        this.y = y;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void changeKey(Key key) {
         hasKey = key;
-        int offset =(int)(level.getLevelData().getTileSize()*0.1);
-        int x = (int) super.getX();
-        myInfo = new Information((Float)super.getX(), (Float)super.getY(), width-offset, height-offset, hasKey, colors);
+    }
+
+    public Key getKey() {
+        return hasKey;
     }
 }

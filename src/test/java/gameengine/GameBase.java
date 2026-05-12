@@ -60,7 +60,7 @@ public abstract class GameBase {
 				do{
 					do{
 						Graphics g = bs.getDrawGraphics();
-						g.translate(window.getInsetX(), window.getInsetY());
+						g.translate(MyWindow.getInsetX(), MyWindow.getInsetY());
 						draw(g); //Calling method draw() in the sub-class
 						g.dispose();
 					}while(bs.contentsLost());
